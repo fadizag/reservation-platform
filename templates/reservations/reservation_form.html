@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block title %}حجز رحلة{% endblock %}{% block content %}<div class="max-w-2xl mx-auto"><h1 class="text-3xl font-bold mb-6">حجز رحلة جديدة</h1><form method="post" class="space-y-3">{% csrf_token %}{{ form.as_p }}<button class="w-full rounded-xl bg-white text-slate-950 py-3 font-semibold">تأكيد الحجز</button></form></div>{% endblock %}
