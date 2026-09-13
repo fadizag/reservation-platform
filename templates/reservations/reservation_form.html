@@ -37,8 +37,8 @@
         </div>
         <div id="reservation-map" style="height:360px; min-height:300px"></div>
         <div class="p-4 grid md:grid-cols-2 gap-3 text-sm">
-          <div class="rounded-xl p-3" style="background:var(--surface);border:1px solid var(--line)"><strong>الانطلاق:</strong> <span id="pickup-coordinates">لم يتم التحديد</span></div>
-          <div class="rounded-xl p-3" style="background:var(--surface);border:1px solid var(--line)"><strong>الوجهة:</strong> <span id="destination-coordinates">لم يتم التحديد</span></div>
+          <div class="rounded-xl p-3" style="background:var(--surface);border:1px solid var(--line)"><strong>الانطلاق:</strong> <span id="pickup-location-status">لم يتم التحديد</span></div>
+          <div class="rounded-xl p-3" style="background:var(--surface);border:1px solid var(--line)"><strong>الوجهة:</strong> <span id="destination-location-status">لم يتم التحديد</span></div>
         </div>
       </div>
 
@@ -79,8 +79,8 @@
   const pickupLng = document.getElementById('id_pickup_lng');
   const destinationLat = document.getElementById('id_destination_lat');
   const destinationLng = document.getElementById('id_destination_lng');
-  const pickupText = document.getElementById('pickup-coordinates');
-  const destinationText = document.getElementById('destination-coordinates');
+  const pickupStatus = document.getElementById('pickup-location-status');
+  const destinationStatus = document.getElementById('destination-location-status');
   let pickupMarker = null;
   let destinationMarker = null;
   let nextLocation = 'pickup';
@@ -90,13 +90,13 @@
     const lng = latlng.lng.toFixed(6);
     if (type === 'pickup') {
       pickupLat.value = lat; pickupLng.value = lng;
-      pickupText.textContent = lat + '، ' + lng;
+      pickupStatus.textContent = 'تم التحديد';
       if (pickupMarker) pickupMarker.setLatLng(latlng);
       else pickupMarker = L.marker(latlng).addTo(map).bindPopup('الانطلاق').openPopup();
       nextLocation = 'destination';
     } else {
       destinationLat.value = lat; destinationLng.value = lng;
-      destinationText.textContent = lat + '، ' + lng;
+      destinationStatus.textContent = 'تم التحديد';
       if (destinationMarker) destinationMarker.setLatLng(latlng);
       else destinationMarker = L.marker(latlng).addTo(map).bindPopup('الوجهة').openPopup();
       nextLocation = 'pickup';
@@ -108,8 +108,8 @@
   document.getElementById('reset-map').addEventListener('click', function () {
     pickupLat.value = ''; pickupLng.value = '';
     destinationLat.value = ''; destinationLng.value = '';
-    pickupText.textContent = 'لم يتم التحديد';
-    destinationText.textContent = 'لم يتم التحديد';
+    pickupStatus.textContent = 'لم يتم التحديد';
+    destinationStatus.textContent = 'لم يتم التحديد';
     if (pickupMarker) { map.removeLayer(pickupMarker); pickupMarker = null; }
     if (destinationMarker) { map.removeLayer(destinationMarker); destinationMarker = null; }
     nextLocation = 'pickup';
