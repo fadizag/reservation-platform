@@ -1,7 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied,ValidationError
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404,redirect,render
+from django.utils import timezone
 from apps.reservations.forms import ReservationCreateForm,DelayRequestForm,CancellationForm,DisputeForm
 from apps.reservations.models import Reservation,DelayRequest
 from apps.reservations.services import state_machine,delay,cancellation,no_show
@@ -38,7 +39,7 @@ def _transition(request,pk,to,role):
 def driver_depart(request,pk): return _transition(request,pk,Reservation.Status.DRIVER_ON_THE_WAY,{"driver":request.user})
 @login_required
 def driver_arrive(request,pk):
-    r=get_object_or_404(Reservation,pk=pk,driver=request.user); state_machine.transition(r,Reservation.Status.DRIVER_ARRIVED,actor=request.user,reason="Driver arrived"); r.waiting_deadline=__import__('django').utils.timezone.now()+__import__('django').utils.timezone.timedelta(minutes=10); r.save(update_fields=["waiting_deadline"]); state_machine.transition(r,Reservation.Status.WAITING,actor=request.user,reason="Waiting started"); return redirect("reservations:detail",pk)
+    r=get_object_or_404(Reservation,pk=pk,driver=request.user); state_machine.transition(r,Reservation.Status.DRIVER_ARRIVED,actor=request.user,reason="Driver arrived"); r.waiting_deadline=timezone.now()+timezone.timedelta(minutes=10); r.save(update_fields=["waiting_deadline"]); state_machine.transition(r,Reservation.Status.WAITING,actor=request.user,reason="Waiting started"); return redirect("reservations:detail",pk)
 @login_required
 def passenger_checkin(request,pk): return _transition(request,pk,Reservation.Status.IN_PROGRESS,{"passenger":request.user})
 @login_required
