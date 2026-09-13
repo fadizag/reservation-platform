@@ -1,1 +1,36 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}منصة حجز الرحلات{% endblock %}</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-slate-950 text-slate-100 min-h-screen"><header class="border-b border-slate-800"><div class="max-w-5xl mx-auto px-4 py-4 flex justify-between"><a href="/" class="font-bold">منصة حجز الرحلات</a>{% if user.is_authenticated %}<a href="{% url 'accounts:logout' %}" class="text-slate-400">خروج</a>{% endif %}</div></header><main class="max-w-5xl mx-auto px-4 py-8">{% if messages %}{% for message in messages %}<div class="mb-4 rounded-xl bg-slate-800 p-4">{{ message }}</div>{% endfor %}{% endif %}{% block content %}{% endblock %}</main></body></html>
+{% load static %}
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}حجز الرحلات{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Tajawal','ui-sans-serif','system-ui']},colors:{cream:'#F7F2E8',charcoal:'#252422',terra:'#B85C45',sand:'#E9DFC9'}}}};</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--cream:#F7F2E8;--paper:#FFFDF8;--charcoal:#252422;--muted:#756F67;--terra:#B85C45;--sand:#E9DFC9;--line:#E7DFD2;--success:#5E8068;--warning:#A47C3B;--danger:#B85C45;--info:#65788A}
+    *{box-sizing:border-box} body{font-family:Tajawal,sans-serif;background:var(--cream);color:var(--charcoal)}
+    .shell{max-width:1180px;margin:auto;padding:24px}.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(37,36,34,.06)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 18px;font-weight:700;transition:.18s;min-height:44px}.btn-primary{background:var(--charcoal);color:white}.btn-primary:hover{transform:translateY(-1px);box-shadow:0 7px 18px rgba(37,36,34,.16)}.btn-secondary{border:1px solid #CFC5B7;background:transparent}.btn-danger{background:var(--terra);color:white}
+    .field{width:100%;border:1px solid #D8D0C4;background:#FFFEFB;border-radius:12px;padding:12px 14px;outline:0}.field:focus{border-color:var(--charcoal);box-shadow:0 0 0 3px rgba(37,36,34,.08)}
+    .bottom-nav{display:none}.nav-link{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;color:#615B54}.nav-link:hover{background:#F0E9DE;color:var(--charcoal)}
+    @media(max-width:767px){.shell{padding:16px 16px 92px}.desktop-nav{display:none}.bottom-nav{display:flex;position:fixed;bottom:12px;left:12px;right:12px;z-index:40;background:rgba(255,253,248,.96);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 35px rgba(37,36,34,.13);padding:7px}.bottom-nav a{flex:1;text-align:center;font-size:12px;padding:8px 4px;border-radius:12px}.bottom-nav a:hover{background:#F0E9DE}}
+    .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}.badge-success{background:#E7F0E9;color:#41614B}.badge-warning{background:#F5ECD9;color:#775A28}.badge-danger{background:#F7E4DE;color:#874333}.badge-info{background:#E8EDF1;color:#506273}.badge-neutral{background:#EEEAE4;color:#625D56}
+  </style>
+</head>
+<body>
+<header class="desktop-nav border-b" style="background:rgba(255,253,248,.88);border-color:var(--line)"><div class="shell py-4 flex items-center justify-between gap-6">
+  <a href="/" class="font-extrabold text-xl">حجز الرحلات</a>
+  <nav class="flex gap-1">
+    {% if user.is_authenticated %}<a class="nav-link" href="/reservations/">الحجوزات</a>{% endif %}
+    {% if user.is_authenticated and user.role == 'driver' %}<a class="nav-link" href="/reservations/driver/">رحلاتي</a>{% endif %}
+    {% if user.is_authenticated and user.role == 'passenger' %}<a class="nav-link" href="/reservations/passenger/">الرئيسية</a>{% endif %}
+    {% if user.is_authenticated %}<a class="nav-link" href="/accounts/profile/">الحساب</a><a class="nav-link" href="/notifications/">الإشعارات</a>{% else %}<a class="nav-link" href="/accounts/login/">دخول</a>{% endif %}
+  </nav>
+</div></header>
+<main>{% block content %}{% endblock %}</main>
+<nav class="bottom-nav" aria-label="التنقل الرئيسي"><a href="/">⌂<br>الرئيسية</a><a href="/reservations/">▣<br>الحجوزات</a><a href="/notifications/">◔<br>الإشعارات</a><a href="/accounts/profile/">◯<br>الحساب</a></nav>
+</body></html>
