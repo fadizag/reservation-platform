@@ -1,1 +1,5 @@
-{% extends 'base.html' %}{% block title %}تسجيل الدخول{% endblock %}{% block content %}<div class="max-w-md mx-auto"><h1 class="text-3xl font-bold mb-6">تسجيل الدخول</h1><form method="post" class="space-y-4">{% csrf_token %}{{ form.as_p }}<button class="w-full rounded-xl bg-white text-slate-950 py-3 font-semibold">دخول</button></form><p class="mt-5 text-slate-400">ليس لديك حساب؟ <a class="underline" href="{% url 'accounts:signup' %}">أنشئ حسابًا</a></p></div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}تسجيل الدخول{% endblock %}
+{% block content %}
+<div class="shell py-10"><div class="max-w-md mx-auto card p-6 md:p-8"><p class="text-sm" style="color:var(--muted)">مرحبًا بعودتك</p><h1 class="text-3xl font-extrabold mt-1">تسجيل الدخول</h1><form method="post" class="space-y-4 mt-6">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}<div><label class="block text-sm font-bold mb-2" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<p class="text-sm mt-1" style="color:var(--danger)">{{ field.errors|striptags }}</p>{% endif %}</div>{% endfor %}<button class="btn btn-primary w-full" type="submit">دخول</button></form><p class="mt-5 text-sm" style="color:var(--muted)">ليس لديك حساب؟ <a class="font-bold underline" href="{% url 'accounts:signup' %}">أنشئ حسابًا</a></p></div></div>
+{% endblock %}
