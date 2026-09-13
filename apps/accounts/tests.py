@@ -1,3 +1,5 @@
+import os
+
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -6,7 +8,11 @@ from apps.accounts.models import User
 
 class DemoAccountsCommandTests(TestCase):
     def test_seed_demo_users_creates_expected_demo_accounts(self):
-        call_command("seed_demo_users")
+        os.environ["DEMO_ACCOUNT_PASSWORD"] = "1234567890"
+        try:
+            call_command("seed_demo_users")
+        finally:
+            os.environ.pop("DEMO_ACCOUNT_PASSWORD", None)
 
         passenger = User.objects.get(username="demo_passenger")
         driver = User.objects.get(username="demo_driver")
