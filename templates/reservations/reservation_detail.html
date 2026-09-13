@@ -1,1 +1,30 @@
-{% extends 'base.html' %}{% block title %}تفاصيل الحجز{% endblock %}{% block content %}<div class="shell space-y-5"><div><a class="text-sm underline" href="/reservations/">العودة للحجوزات</a><h1 class="text-3xl font-extrabold mt-3">تفاصيل الرحلة</h1></div><section class="card p-6"><div class="flex flex-wrap items-start justify-between gap-4"><div><span class="badge badge-info">● {{ reservation.get_status_display }}</span><h2 class="text-2xl font-extrabold mt-3">{{ reservation.pickup_label }} ← {{ reservation.destination_label }}</h2><p class="mt-2" style="color:var(--muted)">{{ reservation.scheduled_at|date:'Y/m/d H:i' }}</p></div></div></section><section class="card p-6"><h2 class="text-xl font-bold mb-5">حالة الرحلة</h2><ol class="space-y-4 border-r-2 pr-5" style="border-color:var(--sand)">{% for event in reservation.events.all %}<li><p class="font-bold">{{ event.get_status_display }}</p><p class="text-sm mt-1" style="color:var(--muted)">{{ event.created_at|date:'Y/m/d H:i' }}</p></li>{% empty %}<li style="color:var(--muted)">لا توجد أحداث مسجلة بعد.</li>{% endfor %}</ol></section><section class="card p-6"><h2 class="text-xl font-bold mb-4">الإجراءات</h2><div class="flex flex-wrap gap-2">{% for action in actions %}<a class="btn {% if forloop.first %}btn-primary{% else %}btn-secondary{% endif %}" href="{{ action.url }}">{{ action.label }}</a>{% empty %}<p style="color:var(--muted)">لا توجد إجراءات متاحة حاليًا.</p>{% endfor %}</div></section></div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}تفاصيل الرحلة #{{ reservation.pk }}{% endblock %}
+{% block content %}
+<div class="shell space-y-5">
+  <div><a class="text-sm underline" href="{% url 'reservations:index' %}">العودة للحجوزات</a><h1 class="text-3xl font-extrabold mt-3">تفاصيل الرحلة</h1></div>
+
+  <section class="card p-6 md:p-8">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div><span class="badge badge-info">● {{ reservation.get_status_display }}</span><h2 class="text-2xl font-extrabold mt-3">{{ reservation.pickup.label }} ← {{ reservation.destination.label }}</h2><p class="mt-2" style="color:var(--muted)">{{ reservation.scheduled_time|date:'Y/m/d H:i' }}</p></div>
+      <div class="text-sm" style="color:var(--muted)">الحجز #{{ reservation.pk }}</div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-4 mt-6"><div><p class="text-xs" style="color:var(--muted)">الراكب</p><p class="font-bold mt-1">{{ reservation.passenger.username }}</p></div><div><p class="text-xs" style="color:var(--muted)">السائق</p><p class="font-bold mt-1">{% if reservation.driver %}{{ reservation.driver.username }}{% else %}لم يتم التعيين{% endif %}</p></div><div><p class="text-xs" style="color:var(--muted)">المقاعد</p><p class="font-bold mt-1">{{ reservation.seats_requested }}</p></div></div>
+    {% if reservation.additional_info %}<div class="rounded-2xl p-4 mt-5" style="background:#F2EBDD;border:1px solid var(--line)"><p class="font-bold">ملاحظات</p><p class="text-sm mt-1">{{ reservation.additional_info }}</p></div>{% endif %}
+  </section>
+
+  <section class="card p-6"><h2 class="text-xl font-bold mb-5">مسار الحالة</h2><ol class="space-y-4 border-r-2 pr-5" style="border-color:var(--sand)">{% for event in events %}<li><div class="flex items-center gap-2"><span class="badge badge-neutral">{{ event.new_status }}</span><span class="font-bold">{{ event.event_type }}</span></div><p class="text-sm mt-1" style="color:var(--muted)">{{ event.occurred_at|date:'Y/m/d H:i' }}{% if event.reason %} · {{ event.reason }}{% endif %}</p></li>{% empty %}<li style="color:var(--muted)">لا توجد أحداث مسجلة بعد.</li>{% endfor %}</ol></section>
+
+  <section class="card p-6"><h2 class="text-xl font-bold mb-4">الإجراءات</h2><div class="flex flex-wrap gap-2">
+    {% if request.user.is_driver and reservation.status == 'pending' %}<a class="btn btn-primary" href="{% url 'reservations:accept' reservation.pk %}">قبول الرحلة</a>{% endif %}
+    {% if request.user.is_driver and reservation.status == 'confirmed' %}<a class="btn btn-primary" href="{% url 'reservations:depart' reservation.pk %}">بدء التوجه</a>{% endif %}
+    {% if request.user.is_driver and reservation.status == 'driver_on_the_way' %}<a class="btn btn-primary" href="{% url 'reservations:arrive' reservation.pk %}">تأكيد الوصول</a>{% endif %}
+    {% if request.user.is_passenger and reservation.status == 'waiting' %}<a class="btn btn-primary" href="{% url 'reservations:checkin' reservation.pk %}">تأكيد حضوري</a>{% endif %}
+    {% if request.user.is_driver and reservation.status == 'in_progress' %}<a class="btn btn-primary" href="{% url 'reservations:complete' reservation.pk %}">إنهاء الرحلة</a>{% endif %}
+  </div></section>
+
+  {% if reservation.active_delay_request %}<section class="card p-6"><h2 class="text-xl font-bold">طلب تأخير</h2><p class="text-sm mt-2" style="color:var(--muted)">طلب {{ reservation.active_delay_request.minutes_requested }} دقيقة إضافية — {{ reservation.active_delay_request.get_status_display }}</p>{% if reservation.active_delay_request.requested_by_user_id != request.user.id %}<div class="flex gap-2 mt-4"><a class="btn btn-primary" href="{% url 'reservations:delay_request_respond' reservation.active_delay_request.pk 1 %}">موافقة</a><a class="btn btn-secondary" href="{% url 'reservations:delay_request_respond' reservation.active_delay_request.pk 0 %}">رفض</a></div>{% endif %}</section>{% endif %}
+
+  {% if reservation.status != 'completed' and reservation.status != 'cancelled' %}<section class="card p-6"><h2 class="text-xl font-bold mb-4">طلب تأخير أو إلغاء</h2><form method="post" action="{% url 'reservations:delay_request_create' reservation.pk %}" class="flex flex-wrap items-end gap-3">{% csrf_token %}<div class="min-w-48 flex-1">{{ delay_form.minutes.label_tag }}{{ delay_form.minutes }}</div><button class="btn btn-secondary" type="submit">طلب تأخير</button></form><form method="post" action="{% url 'reservations:cancel' reservation.pk %}" class="mt-4 space-y-3">{% csrf_token %}{{ cancel_form.reason.label_tag }}{{ cancel_form.reason }}<button class="btn btn-danger" type="submit">طلب الإلغاء</button></form></section>{% endif %}
+</div>
+{% endblock %}
