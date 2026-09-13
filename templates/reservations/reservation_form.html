@@ -1,1 +1,126 @@
-{% extends 'base.html' %}{% block title %}حجز رحلة{% endblock %}{% block content %}<div class="shell"><div class="max-w-3xl mx-auto"><div class="mb-6"><p class="text-sm" style="color:var(--muted)">حجز جديد</p><h1 class="text-3xl font-extrabold mt-1">خطط لرحلتك</h1><p class="mt-2" style="color:var(--muted)">أدخل نقاط الرحلة والموعد، ثم راجع التفاصيل قبل التأكيد.</p></div><form method="post" class="card p-6 md:p-8 space-y-6">{% csrf_token %}{{ form.non_field_errors }}<div class="grid md:grid-cols-2 gap-5">{% for field in form %}<div><label class="block text-sm font-bold mb-2" for="{{ field.id_for_label }}">{{ field.label }}</label><div>{{ field }}</div>{% if field.errors %}<p class="text-sm mt-1" style="color:var(--danger)">{{ field.errors|striptags }}</p>{% endif %}</div>{% endfor %}</div><div class="rounded-2xl p-4" style="background:#F2EBDD;border:1px solid var(--line)"><p class="font-bold">تأكيد المواقع</p><p class="text-sm mt-1" style="color:var(--muted)">الخريطة التفاعلية ستُضاف عندما يتم تفعيل مزود الخرائط؛ لم نغيّر منطق الإحداثيات الحالي.</p></div><button class="btn btn-primary w-full" type="submit">تأكيد الحجز</button></form></div></div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}حجز رحلة{% endblock %}
+{% block content %}
+<div class="shell">
+  <div class="max-w-3xl mx-auto">
+    <div class="mb-6">
+      <p class="text-sm" style="color:var(--muted)">حجز جديد</p>
+      <h1 class="text-3xl font-extrabold mt-1">خطط لرحلتك</h1>
+      <p class="mt-2" style="color:var(--muted)">حدد الانطلاق والوجهة من الخريطة، ثم اختر موعد الرحلة.</p>
+    </div>
+
+    <form method="post" class="card p-6 md:p-8 space-y-6" id="reservation-form">
+      {% csrf_token %}
+      {{ form.pickup_lat }}{{ form.pickup_lng }}{{ form.destination_lat }}{{ form.destination_lng }}
+      {{ form.non_field_errors }}
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-bold mb-2" for="{{ form.pickup_label.id_for_label }}">{{ form.pickup_label.label }}</label>
+          {{ form.pickup_label }}
+          {% if form.pickup_label.errors %}<p class="text-sm mt-1" style="color:var(--danger)">{{ form.pickup_label.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-bold mb-2" for="{{ form.destination_label.id_for_label }}">{{ form.destination_label.label }}</label>
+          {{ form.destination_label }}
+          {% if form.destination_label.errors %}<p class="text-sm mt-1" style="color:var(--danger)">{{ form.destination_label.errors|striptags }}</p>{% endif %}
+        </div>
+      </div>
+
+      <div class="rounded-2xl overflow-hidden" style="border:1px solid var(--line)">
+        <div class="p-4 flex items-center justify-between gap-3" style="background:#F2EBDD">
+          <div>
+            <p class="font-bold">حدد المواقع على الخريطة</p>
+            <p class="text-sm mt-1" style="color:var(--muted)">اضغط مرة لتحديد الانطلاق، ثم اضغط مرة ثانية لتحديد الوجهة.</p>
+          </div>
+          <button type="button" id="reset-map" class="btn btn-secondary">إعادة</button>
+        </div>
+        <div id="reservation-map" style="height:360px; min-height:300px"></div>
+        <div class="p-4 grid md:grid-cols-2 gap-3 text-sm">
+          <div class="rounded-xl p-3" style="background:var(--surface);border:1px solid var(--line)"><strong>الانطلاق:</strong> <span id="pickup-coordinates">لم يتم التحديد</span></div>
+          <div class="rounded-xl p-3" style="background:var(--surface);border:1px solid var(--line)"><strong>الوجهة:</strong> <span id="destination-coordinates">لم يتم التحديد</span></div>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-bold mb-2" for="{{ form.scheduled_time.id_for_label }}">{{ form.scheduled_time.label }}</label>
+          {{ form.scheduled_time }}
+          {% if form.scheduled_time.errors %}<p class="text-sm mt-1" style="color:var(--danger)">{{ form.scheduled_time.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-bold mb-2" for="{{ form.seats_requested.id_for_label }}">{{ form.seats_requested.label }}</label>
+          {{ form.seats_requested }}
+          {% if form.seats_requested.errors %}<p class="text-sm mt-1" style="color:var(--danger)">{{ form.seats_requested.errors|striptags }}</p>{% endif %}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-bold mb-2" for="{{ form.additional_info.id_for_label }}">{{ form.additional_info.label }}</label>
+        {{ form.additional_info }}
+      </div>
+
+      <button class="btn btn-primary w-full" type="submit">تأكيد الحجز</button>
+    </form>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(function () {
+  const map = L.map('reservation-map').setView([31.9, 35.2], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  const pickupLat = document.getElementById('id_pickup_lat');
+  const pickupLng = document.getElementById('id_pickup_lng');
+  const destinationLat = document.getElementById('id_destination_lat');
+  const destinationLng = document.getElementById('id_destination_lng');
+  const pickupText = document.getElementById('pickup-coordinates');
+  const destinationText = document.getElementById('destination-coordinates');
+  let pickupMarker = null;
+  let destinationMarker = null;
+  let nextLocation = 'pickup';
+
+  function setLocation(type, latlng) {
+    const lat = latlng.lat.toFixed(6);
+    const lng = latlng.lng.toFixed(6);
+    if (type === 'pickup') {
+      pickupLat.value = lat; pickupLng.value = lng;
+      pickupText.textContent = lat + '، ' + lng;
+      if (pickupMarker) pickupMarker.setLatLng(latlng);
+      else pickupMarker = L.marker(latlng).addTo(map).bindPopup('الانطلاق').openPopup();
+      nextLocation = 'destination';
+    } else {
+      destinationLat.value = lat; destinationLng.value = lng;
+      destinationText.textContent = lat + '، ' + lng;
+      if (destinationMarker) destinationMarker.setLatLng(latlng);
+      else destinationMarker = L.marker(latlng).addTo(map).bindPopup('الوجهة').openPopup();
+      nextLocation = 'pickup';
+    }
+  }
+
+  map.on('click', function (event) { setLocation(nextLocation, event.latlng); });
+
+  document.getElementById('reset-map').addEventListener('click', function () {
+    pickupLat.value = ''; pickupLng.value = '';
+    destinationLat.value = ''; destinationLng.value = '';
+    pickupText.textContent = 'لم يتم التحديد';
+    destinationText.textContent = 'لم يتم التحديد';
+    if (pickupMarker) { map.removeLayer(pickupMarker); pickupMarker = null; }
+    if (destinationMarker) { map.removeLayer(destinationMarker); destinationMarker = null; }
+    nextLocation = 'pickup';
+  });
+
+  document.getElementById('reservation-form').addEventListener('submit', function (event) {
+    if (!pickupLat.value || !pickupLng.value || !destinationLat.value || !destinationLng.value) {
+      event.preventDefault();
+      alert('يرجى تحديد الانطلاق والوجهة على الخريطة قبل تأكيد الحجز.');
+    }
+  });
+})();
+</script>
+{% endblock %}
