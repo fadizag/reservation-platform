@@ -1,1 +1,31 @@
-{% extends 'base.html' %}{% block title %}رحلاتي — حجز الرحلات{% endblock %}{% block content %}<div class="shell space-y-6"><section><p class="text-sm" style="color:var(--muted)">لوحة السائق</p><h1 class="text-3xl font-extrabold mt-1">الرحلة الحالية</h1></section>{% if reservations %}<section class="card p-6"><div class="flex justify-between gap-4 mb-6"><div><span class="badge badge-success">● الرحلة الحالية</span><h2 class="text-2xl font-extrabold mt-3">رحلة مع الراكب</h2></div><span class="text-3xl">⌖</span></div><div class="grid md:grid-cols-3 gap-5"><div><p class="text-xs" style="color:var(--muted)">الراكب</p><p class="font-bold mt-1">{{ reservations.0.passenger }}</p></div><div><p class="text-xs" style="color:var(--muted)">الانطلاق</p><p class="font-bold mt-1">{{ reservations.0.pickup_label }}</p></div><div><p class="text-xs" style="color:var(--muted)">الوجهة</p><p class="font-bold mt-1">{{ reservations.0.destination_label }}</p></div></div><a class="btn btn-primary mt-6" href="/reservations/{{ reservations.0.id }}/">فتح الرحلة</a></section>{% else %}<section class="card p-8 text-center"><h2 class="text-2xl font-extrabold">لا توجد رحلة حالية</h2><p class="mt-2" style="color:var(--muted)">ستظهر الرحلة هنا عندما تصبح متاحة لك.</p></section>{% endif %}</div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}رحلاتي — حجز الرحلات{% endblock %}
+{% block content %}
+<div class="shell space-y-6">
+  <section><p class="text-sm" style="color:var(--muted)">لوحة السائق</p><h1 class="text-3xl font-extrabold mt-1">الرحلة الحالية</h1></section>
+
+  {% if my_rides %}
+    {% with trip=my_rides.0 %}
+    <section class="card p-6 md:p-8">
+      <div class="flex flex-wrap justify-between gap-4"><div><span class="badge badge-success">● رحلة نشطة</span><h2 class="text-2xl font-extrabold mt-3">{{ trip.pickup.label }} ← {{ trip.destination.label }}</h2></div><span class="badge badge-neutral">{{ trip.get_status_display }}</span></div>
+      <div class="grid md:grid-cols-3 gap-5 mt-6"><div><p class="text-xs" style="color:var(--muted)">الراكب</p><p class="font-bold mt-1">{{ trip.passenger.username }}</p></div><div><p class="text-xs" style="color:var(--muted)">الموعد</p><p class="font-bold mt-1">{{ trip.scheduled_time|date:'Y/m/d H:i' }}</p></div><div><p class="text-xs" style="color:var(--muted)">المقاعد</p><p class="font-bold mt-1">{{ trip.seats_requested }}</p></div></div>
+      <a class="btn btn-primary mt-6" href="{% url 'reservations:detail' trip.pk %}">فتح الرحلة</a>
+    </section>
+    {% endwith %}
+  {% else %}
+    <section class="card p-8 text-center"><h2 class="text-2xl font-extrabold">لا توجد رحلة حالية</h2><p class="mt-2" style="color:var(--muted)">يمكنك اختيار حجز متاح من القائمة أدناه.</p></section>
+  {% endif %}
+
+  {% if available %}
+    <section><h2 class="text-xl font-bold mb-3">حجوزات متاحة</h2><div class="grid gap-3">
+      {% for r in available %}<div class="card p-5"><div class="flex flex-wrap items-center justify-between gap-3"><div><p class="font-bold">{{ r.pickup.label }} ← {{ r.destination.label }}</p><p class="text-sm mt-1" style="color:var(--muted)">{{ r.scheduled_time|date:'Y/m/d H:i' }} · {{ r.seats_requested }} مقعد</p></div><a class="btn btn-primary" href="{% url 'reservations:accept' r.pk %}">قبول الرحلة</a></div></div>{% endfor %}
+    </div></section>
+  {% endif %}
+
+  {% if history %}
+    <section><h2 class="text-xl font-bold mb-3">الرحلات المكتملة</h2><div class="grid gap-3">
+      {% for r in history %}<a class="card p-5 block" href="{% url 'reservations:detail' r.pk %}"><div class="flex justify-between gap-4"><div><p class="font-bold">{{ r.pickup.label }} ← {{ r.destination.label }}</p><p class="text-sm mt-1" style="color:var(--muted)">{{ r.scheduled_time|date:'Y/m/d H:i' }}</p></div><span class="badge badge-neutral">مكتملة</span></div></a>{% endfor %}
+    </div></section>
+  {% endif %}
+</div>
+{% endblock %}
