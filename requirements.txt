@@ -1,0 +1,4 @@
+Django>=5.0,<5.1
+psycopg2-binary>=2.9
+# Optional, for real Web Push dispatch later:
+# pywebpush>=2.0
