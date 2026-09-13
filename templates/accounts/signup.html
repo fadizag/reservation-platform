@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block title %}إنشاء حساب{% endblock %}{% block content %}<div class="max-w-md mx-auto"><h1 class="text-3xl font-bold mb-6">إنشاء حساب</h1><form method="post" class="space-y-4">{% csrf_token %}{{ form.as_p }}<button class="w-full rounded-xl bg-white text-slate-950 py-3 font-semibold">إنشاء الحساب</button></form></div>{% endblock %}
